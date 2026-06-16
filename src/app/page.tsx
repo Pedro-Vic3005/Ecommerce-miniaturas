@@ -1,65 +1,163 @@
-import Image from "next/image";
+import Image from 'next/image';
+import Link from 'next/link';
+import { ProductCard } from '@/components/product/ProductCard';
+import { products, brands } from '@/data/products';
 
 export default function Home() {
+  const featuredProducts = products.filter(p => p.isFeatured).slice(0, 8);
+  const newArrivals = products.filter(p => p.isNew).slice(0, 4);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="flex flex-col min-h-screen">
+      {/* Hero Section */}
+      <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Image 
+            src="/images/banners/hero.png" 
+            alt="Hero Banner" 
+            fill 
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-bg-primary via-bg-primary/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-transparent to-transparent" />
+        </div>
+        
+        <div className="container-custom relative z-10">
+          <div className="max-w-2xl space-y-6 animate-fade-up">
+            <span className="inline-block px-3 py-1 bg-accent-gold/20 text-accent-gold-light border border-accent-gold/30 rounded-full text-xs font-bold tracking-widest uppercase">
+              Nova Coleção 2026
+            </span>
+            <h1 className="text-5xl md:text-7xl font-bold font-[var(--font-heading)] leading-tight">
+              Sua coleção merece o <span className="text-gradient-gold">extraordinário.</span>
+            </h1>
+            <p className="text-lg text-text-secondary md:max-w-xl">
+              Descubra miniaturas exclusivas na escala 1:64. Detalhamento absurdo, 
+              marcas premium e edições limitadas para os colecionadores mais exigentes.
+            </p>
+            <div className="flex flex-wrap gap-4 pt-4">
+              <Link 
+                href="/miniaturas" 
+                className="px-8 py-4 bg-accent-red hover:bg-accent-red-hover text-white font-bold rounded shadow-lg shadow-accent-red/20 transition-all hover:-translate-y-1"
+              >
+                Explorar Coleções
+              </Link>
+              <Link 
+                href="/lancamentos" 
+                className="px-8 py-4 bg-bg-tertiary hover:bg-bg-elevated border border-border text-text-primary font-bold rounded transition-all hover:-translate-y-1"
+              >
+                Ver Lançamentos
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Brands Carousel */}
+      <section className="py-12 border-y border-border bg-bg-secondary overflow-hidden">
+        <div className="container-custom">
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-60 hover:opacity-100 transition-opacity duration-500">
+            {brands.map((brand) => (
+              <div key={brand.id} className="flex flex-col items-center gap-2 grayscale hover:grayscale-0 transition-all">
+                <span className="text-3xl">{brand.logo}</span>
+                <span className="text-xs font-bold tracking-wider text-text-muted">{brand.name.toUpperCase()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* New Arrivals */}
+      <section className="py-20">
+        <div className="container-custom">
+          <div className="flex justify-between items-end mb-10">
+            <div>
+              <h2 className="text-3xl font-bold font-[var(--font-heading)] text-text-primary">Lançamentos</h2>
+              <p className="text-text-secondary mt-2">As últimas adições à nossa garagem.</p>
+            </div>
+            <Link href="/lancamentos" className="hidden sm:flex items-center gap-2 text-accent-red hover:text-accent-red-hover font-bold transition-colors">
+              Ver todos <span aria-hidden="true">&rarr;</span>
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {newArrivals.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Promo Banner */}
+      <section className="py-20 bg-bg-secondary border-y border-border">
+        <div className="container-custom">
+          <div className="relative rounded-2xl overflow-hidden bg-bg-primary border border-border">
+            <div className="absolute inset-0 bg-[url('/images/products/skyline-r34.png')] bg-cover bg-center opacity-20" />
+            <div className="absolute inset-0 bg-gradient-to-r from-bg-primary via-bg-primary/90 to-transparent" />
+            
+            <div className="relative p-8 md:p-16 max-w-xl">
+              <h3 className="text-3xl font-bold font-[var(--font-heading)] text-text-primary mb-4">
+                Pré-venda Exclusiva
+              </h3>
+              <p className="text-text-secondary mb-8">
+                Garanta as edições limitadas antes que cheguem ao estoque. 
+                Reserve com apenas 20% do valor e pague o restante no envio.
+              </p>
+              <Link 
+                href="/pre-venda" 
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-bg-primary font-bold rounded hover:bg-gray-200 transition-colors"
+              >
+                Ver Modelos em Pré-venda
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="py-20">
+        <div className="container-custom">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold font-[var(--font-heading)] text-text-primary">Destaques da Coleção</h2>
+            <p className="text-text-secondary mt-2">Os modelos mais desejados pelos colecionadores.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {featuredProducts.map(product => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="py-24 relative overflow-hidden border-t border-border">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-full bg-accent-red/5 blur-[100px] rounded-full pointer-events-none" />
+        <div className="container-custom relative z-10 text-center max-w-2xl">
+          <span className="text-4xl mb-6 block">✉️</span>
+          <h2 className="text-3xl font-bold font-[var(--font-heading)] text-text-primary mb-4">
+            Entre para o Clube
+          </h2>
+          <p className="text-text-secondary mb-8">
+            Assine nossa newsletter e receba 10% de desconto na primeira compra, 
+            além de acesso antecipado a pré-vendas e lançamentos limitados.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+          <form className="flex flex-col sm:flex-row gap-3">
+            <input 
+              type="email" 
+              placeholder="Seu melhor e-mail" 
+              required
+              className="flex-1 px-4 py-3 bg-bg-secondary border border-border rounded focus:border-accent-gold outline-none transition-colors"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <button 
+              type="submit"
+              className="px-8 py-3 bg-accent-gold hover:bg-accent-gold-dark text-bg-primary font-bold rounded transition-colors whitespace-nowrap"
+            >
+              Inscrever-se
+            </button>
+          </form>
         </div>
-      </main>
+      </section>
     </div>
   );
 }
