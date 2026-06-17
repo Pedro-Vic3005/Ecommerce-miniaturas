@@ -1,70 +1,114 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
-  login: (email: string, password: string) => boolean;
-  register: (name: string, email: string, password: string) => boolean;
-  logout: () => void;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_KEY = 'rossano-auth';
+function mapSupabaseUser(user: any): User {
+  const email = user.email ?? '';
+  return {
+    id: user.id,
+    name: user.user_metadata?.full_name || email.split('@')[0] || 'Cliente',
+    email,
+    role: (user.user_metadata?.role as 'customer' | 'admin')
+      || (email.toLowerCase().includes('admin') ? 'admin' : 'customer'),
+    avatar: user.user_metadata?.avatar,
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem(AUTH_KEY);
-    if (saved) {
-      try { setUser(JSON.parse(saved)); } catch { /* ignore */ }
-    }
-  }, []);
+    let mounted = true;
 
-  useEffect(() => {
-    if (mounted) {
-      if (user) {
-        localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    const loadSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+
+      if (data.session?.user) {
+        setUser(mapSupabaseUser(data.session.user));
       } else {
-        localStorage.removeItem(AUTH_KEY);
+        setUser(null);
       }
+      setIsLoading(false);
+    };
+
+    loadSession();
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(mapSupabaseUser(session.user));
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      if (subscription?.subscription) {
+        subscription.subscription.unsubscribe();
+      }
+    };
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const { error, data } = await supabase.auth.signInWithPassword({
+      email: email.toLowerCase().trim(),
+      password,
+    });
+
+    if (error || !data.session?.user) {
+      return false;
     }
-  }, [user, mounted]);
 
-  const login = useCallback((email: string, _password: string) => {
-    // Simulated login
-    const mockUser: User = {
-      id: '1',
-      name: email.split('@')[0],
-      email,
-    };
-    setUser(mockUser);
+    setUser(mapSupabaseUser(data.session.user));
     return true;
   }, []);
 
-  const register = useCallback((name: string, email: string, _password: string) => {
-    const mockUser: User = {
-      id: Date.now().toString(),
-      name,
-      email,
-    };
-    setUser(mockUser);
+  const register = useCallback(async (name: string, email: string, password: string) => {
+    const { error, data } = await supabase.auth.signUp({
+      email: email.toLowerCase().trim(),
+      password,
+      options: {
+        data: { full_name: name, role: 'customer' },
+      },
+    });
+
+    if (error || !data.user) {
+      return false;
+    }
+
+    setUser(mapSupabaseUser(data.user));
     return true;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
   }, []);
 
   return (
     <AuthContext.Provider value={{
-      user, isLoggedIn: !!user, login, register, logout,
+      user,
+      isLoggedIn: !!user,
+      isLoading,
+      login,
+      register,
+      logout,
     }}>
       {children}
     </AuthContext.Provider>

@@ -4,8 +4,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Product } from '@/types';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency, formatInstallments, getDiscountPercent } from '@/lib/utils';
 
 interface ProductCardProps {
@@ -13,8 +15,10 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const router = useRouter();
   const { addItem } = useCart();
   const { toggleItem, isInWishlist } = useWishlist();
+  const { isLoggedIn } = useAuth();
 
   const isWished = isInWishlist(product.id);
   const discount = product.originalPrice ? getDiscountPercent(product.originalPrice, product.price) : 0;
@@ -97,7 +101,13 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           <button
-            onClick={() => addItem(product)}
+            onClick={() => {
+              if (!isLoggedIn) {
+                router.push('/conta/login');
+                return;
+              }
+              addItem(product);
+            }}
             disabled={!product.inStock && !product.isPreOrder}
             className={`w-full py-2.5 rounded text-sm font-bold transition-all shadow-lg ${
               !product.inStock && !product.isPreOrder

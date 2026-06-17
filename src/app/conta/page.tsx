@@ -1,43 +1,114 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
+import { products } from '@/data/products';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function ContaPage() {
-  const { user, isLoggedIn, login, logout } = useAuth();
-  const [email, setEmail] = useState('');
+  const { user, isLoggedIn, logout } = useAuth();
 
   if (!isLoggedIn) {
     return (
       <div className="container-custom py-20 min-h-[60vh] flex items-center justify-center">
-        <div className="max-w-md w-full bg-bg-secondary border border-border rounded-2xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold font-[var(--font-heading)] mb-2">Área do Cliente</h1>
-            <p className="text-text-secondary text-sm">Entre com seu e-mail para acessar seu perfil, pedidos e endereço.</p>
-          </div>
-          
-          <form 
-            onSubmit={(e) => { e.preventDefault(); login(email, 'password123'); }}
-            className="space-y-4"
+        <div className="max-w-md w-full bg-bg-secondary border border-border rounded-2xl p-8 text-center">
+          <h1 className="text-3xl font-bold font-[var(--font-heading)] mb-4">Área de Conta</h1>
+          <p className="text-text-secondary mb-6">
+            Você precisa entrar para continuar. Faça login para acessar o carrinho, pedidos e a área administrativa.
+          </p>
+          <Link
+            href="/conta/login"
+            className="inline-flex px-6 py-3 bg-accent-red text-white font-bold rounded hover:bg-accent-red-hover transition-colors"
           >
+            Ir para Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (user?.role === 'admin') {
+    return (
+      <div className="container-custom py-12 min-h-[60vh]">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-10 pb-6 border-b border-border">
+          <div>
+            <h1 className="text-3xl font-bold font-[var(--font-heading)] mb-2">Painel do Administrador</h1>
+            <p className="text-text-secondary">Bem-vindo(a), <strong className="text-text-primary">{user.name}</strong>. Gerencie produtos e atualize o catálogo.</p>
+          </div>
+          <button
+            onClick={logout}
+            className="px-6 py-2 bg-bg-tertiary hover:bg-bg-elevated border border-border rounded text-sm transition-colors text-accent-red"
+          >
+            Sair da Conta
+          </button>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-[1fr_2fr] items-start">
+          <div className="bg-bg-secondary border border-border rounded-xl p-6 space-y-6">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">E-mail</label>
-              <input 
-                type="email" 
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-bg-primary border border-border rounded outline-none focus:border-accent-red"
-                placeholder="seu@email.com"
-              />
+              <h2 className="text-lg font-bold mb-3">Visão Rápida</h2>
+              <p className="text-sm text-text-secondary">
+                Aqui você encontra os principais recursos para atualizar produtos, estoque e ofertas do site.
+              </p>
             </div>
-            <button 
-              type="submit"
-              className="w-full py-3 bg-accent-red hover:bg-accent-red-hover text-white font-bold rounded transition-colors"
-            >
-              Entrar
-            </button>
-          </form>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span>Produtos cadastrados</span>
+                <strong className="text-text-primary">{products.length}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Pedidos recentes</span>
+                <strong className="text-text-primary">12</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>Pedidos aguardando</span>
+                <strong className="text-text-primary">3</strong>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <button className="w-full py-3 bg-accent-red text-white rounded font-bold hover:bg-accent-red-hover transition-colors">
+                Adicionar Novo Produto
+              </button>
+              <button className="w-full py-3 bg-bg-tertiary border border-border rounded font-bold hover:bg-bg-elevated transition-colors">
+                Atualizar Estoque
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold font-[var(--font-heading)]">Gerenciar Produtos</h2>
+                <p className="text-text-secondary text-sm">Use esta interface para revisar e editar os itens do catálogo.</p>
+              </div>
+              <button className="px-5 py-3 bg-bg-tertiary border border-border rounded font-bold hover:bg-bg-elevated transition-colors">
+                Ver relatórios
+              </button>
+            </div>
+
+            <div className="grid gap-4">
+              {products.slice(0, 6).map((product) => (
+                <div key={product.id} className="bg-bg-secondary border border-border rounded-xl p-5 flex flex-col gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-text-primary">{product.name}</h3>
+                    <p className="text-sm text-text-secondary">{product.brand}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-sm text-text-secondary">
+                    <span className="px-3 py-1 bg-bg-primary border border-border rounded-full">R$ {product.price.toFixed(2)}</span>
+                    <span className="px-3 py-1 bg-bg-primary border border-border rounded-full">{product.inStock ? `${product.stockQuantity} em estoque` : 'Sem estoque'}</span>
+                    {product.isPreOrder && <span className="px-3 py-1 bg-warning/10 text-warning border border-warning/20 rounded-full">Pré-venda</span>}
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    <button className="px-4 py-2 bg-accent-red text-white rounded font-semibold hover:bg-accent-red-hover transition-colors">
+                      Editar
+                    </button>
+                    <button className="px-4 py-2 bg-bg-tertiary border border-border rounded font-semibold hover:bg-bg-elevated transition-colors">
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -59,7 +130,6 @@ export default function ContaPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Profile Info */}
         <div className="md:col-span-1 space-y-6">
           <div className="bg-bg-secondary border border-border rounded-xl p-6">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -100,12 +170,10 @@ export default function ContaPage() {
           </div>
         </div>
 
-        {/* Orders */}
         <div className="md:col-span-2">
           <h2 className="text-xl font-bold mb-6 font-[var(--font-heading)]">Meus Pedidos</h2>
           
           <div className="space-y-4">
-            {/* Order Item */}
             <div className="bg-bg-secondary border border-border rounded-xl p-6">
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4 pb-4 border-b border-border">
                 <div>

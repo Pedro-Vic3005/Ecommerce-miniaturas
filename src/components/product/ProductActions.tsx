@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Product } from '@/types';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useGarage } from '@/hooks/useGarage';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProductActionsProps {
   product: Product;
@@ -12,6 +14,8 @@ interface ProductActionsProps {
 
 export function ProductActions({ product }: ProductActionsProps) {
   const [quantity, setQuantity] = useState(1);
+  const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const { addItem, setIsCartOpen } = useCart();
   const { toggleItem, isInWishlist } = useWishlist();
   const { addItem: addToGarage, isInGarage } = useGarage();
@@ -20,10 +24,18 @@ export function ProductActions({ product }: ProductActionsProps) {
   const inGarage = isInGarage(product.id);
 
   const handleAddToCart = () => {
+    if (!isLoggedIn) {
+      router.push('/conta/login');
+      return;
+    }
     addItem(product, quantity);
   };
 
   const handleBuyNow = () => {
+    if (!isLoggedIn) {
+      router.push('/conta/login');
+      return;
+    }
     addItem(product, quantity);
     setIsCartOpen(true);
   };
